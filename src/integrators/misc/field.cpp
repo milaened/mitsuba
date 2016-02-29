@@ -63,7 +63,8 @@ public:
 		EUV,
 		EAlbedo,
 		EShapeIndex,
-		EPrimIndex
+		EPrimIndex,
+		EMask
 	};
 
 	FieldIntegrator(const Properties &props) : SamplingIntegrator(props) {
@@ -87,6 +88,8 @@ public:
 			m_field = EShapeIndex;
 		} else if (field == "primIndex") {
 			m_field = EPrimIndex;
+		} else if (field == "mask") {
+			m_field = EMask;
 		} else {
 			Log(EError, "Invalid 'field' parameter. Must be one of 'position', "
 				"'relPosition', 'distance', 'geoNormal', 'shNormal', "
@@ -122,8 +125,23 @@ public:
 	Spectrum Li(const RayDifferential &ray, RadianceQueryRecord &rRec) const {
 		Spectrum result(m_undefined);
 
-		if (!rRec.rayIntersect(ray))
+		if (!rRec.rayIntersect(ray)) {
+			switch (m_field) {
+			case EPosition:
+				result.fromLinearRGB(0, 0, 0);
+				break;
+			case ERelativePosition:
+				result.fromLinearRGB(0, 0, 0);
+				break;
+			case EDistance:
+				result = Spectrum((Float)0);
+				break;
+			case EMask:
+				result = Spectrum((Float)0);
+				break;
+			}
 			return result;
+		}
 
 		Intersection &its = rRec.its;
 
@@ -166,6 +184,16 @@ public:
 				break;
 			case EPrimIndex:
 				result = Spectrum((Float) its.primIndex);
+				break;
+			case EMask: {
+					const Sensor *sensor = rRec.scene->getSensor();
+					const Transform &t = sensor->getWorldTransform()->eval(its.t).inverse();
+					Point p = t(its.p);
+					if (p.z <= 400) //Temporary, until we have a better knowledge of the scene camera positions
+						result = Spectrum((Float)1);
+					else
+						result = Spectrum((Float)0);
+				}
 				break;
 			default:
 				Log(EError, "Internal error!");

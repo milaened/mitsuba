@@ -141,7 +141,7 @@ public:
 	 * \return \c false if one of the sample values was \a invalid, e.g.
 	 *    NaN or negative. A warning is also printed in this case
 	 */
-	FINLINE bool put(const Point2 &_pos, const Float *value) {
+	FINLINE bool put(const Point2 &_pos, const Float *value, bool noFilter = false) {
 		const int channels = m_bitmap->getChannelCount();
 
 		/* Check if all sample values are valid */
@@ -158,6 +158,15 @@ public:
 			const Point2 pos(
 				_pos.x - 0.5f - (m_offset.x - m_borderSize),
 				_pos.y - 0.5f - (m_offset.y - m_borderSize));
+
+			/* In case the the entire image does not need filtering */
+			if(noFilter){
+				Float *dest = m_bitmap->getFloatData() + ((int)std::ceil(pos.y) * (size_t) size.x + (int)std::ceil(pos.x)) * channels;
+				for (int k=0; k<channels-1; ++k)
+						*dest++ += value[k];
+				*dest += 1;
+				return true;
+			}
 
 			/* Determine the affected range of pixels */
 			const Point2i min(std::max((int) std::ceil (pos.x - filterRadius), 0),
