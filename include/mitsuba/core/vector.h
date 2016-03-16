@@ -534,8 +534,8 @@ template <typename T> struct TVector3 {
 	/// Divide the vector by the given scalar and return the result
 	TVector3 operator/(T f) const {
 #ifdef MTS_DEBUG
-		if (f == 0)
-			SLog(EWarn, "Vector3: Division by zero!");
+		//if (f == 0)
+			//SLog(EWarn, "Vector3: Division by zero!");
 #endif
 		T recip = (T) 1 / f;
 		return TVector3(x * recip, y * recip, z * recip);

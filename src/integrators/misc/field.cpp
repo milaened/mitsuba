@@ -93,7 +93,7 @@ public:
 		} else {
 			Log(EError, "Invalid 'field' parameter. Must be one of 'position', "
 				"'relPosition', 'distance', 'geoNormal', 'shNormal', "
-				"'primIndex', 'shapeIndex', or 'uv'!");
+				"'primIndex', 'shapeIndex', 'uv', or 'mask'!");
 		}
 
 		if (props.hasProperty("undefined")) {

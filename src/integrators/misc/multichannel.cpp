@@ -180,9 +180,13 @@ public:
 
 		/* If a channel that should not be filtered is present, 
 		firts (and only, but up to scene definition) sample not jittered */
-		bool noFilter = false;
+		/*bool noFilter = false;
 		for (size_t k = 0; k<m_integrators.size(); ++k) {
-			if (m_integrators[k]->getProperties().getPluginName() == "field") {
+			Log(EInfo, "INTEGRATOR NAME:");
+			Log(EInfo, m_integrators[k]->getProperties().getPluginName().c_str());
+			if (m_integrators[k]->getProperties().getPluginName() == "field" || m_integrators[k]->getProperties().getPluginName() == "") {
+				Log(EInfo, "FIELD NAME:");
+				Log(EInfo, m_integrators[k]->getProperties().getString("field").c_str());
 				if (m_integrators[k]->getProperties().getString("field") == "position" ||
 					m_integrators[k]->getProperties().getString("field") == "relPosition" ||
 					m_integrators[k]->getProperties().getString("field") == "distance") {
@@ -190,7 +194,8 @@ public:
 				break;
 				}
 			}
-		}
+		}*/
+		bool noFilter = sampler->getSampleCount() == 1;
 
 		uint32_t queryType = RadianceQueryRecord::ESensorRay;
 		Float *temp = (Float *) alloca(sizeof(Float) * (m_integrators.size() * SPECTRUM_SAMPLES + 2));
