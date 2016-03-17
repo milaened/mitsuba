@@ -111,17 +111,27 @@ public:
 		std::string kc = props.getString("kc", "");
 		std::vector<std::string> kc_tokens = tokenize(kc, ", ");
 		if (kc_tokens.size() == 0) {
-			m_kc[0] = m_kc[1] = 0.0f;
+			m_kc[0] = m_kc[1] = m_kc[2] = 0.0f;
 			m_distortion = false;
-		} else if (kc_tokens.size() == 2) {
-			char *end_ptr0, *end_ptr1;
-			m_kc[0] = (Float) std::strtod(kc_tokens[0].c_str(), &end_ptr0);
-			m_kc[1] = (Float) std::strtod(kc_tokens[1].c_str(), &end_ptr1);
-			if (*end_ptr0 != '\0' || *end_ptr1 != 0)
+		} 
+		//else if (kc_tokens.size() == 2) {
+		//	char *end_ptr0, *end_ptr1;
+		//	m_kc[0] = (Float) std::strtod(kc_tokens[0].c_str(), &end_ptr0);
+		//	m_kc[1] = (Float) std::strtod(kc_tokens[1].c_str(), &end_ptr1);
+		//	if (*end_ptr0 != '\0' || *end_ptr1 != 0)
+		//		Log(EError, "Invalid input to the 'kc' parameter!");
+		//	m_distortion = m_kc[0] != 0 || m_kc[1] != 0;
+		//} 
+		else if (kc_tokens.size() == 3) {
+			char *end_ptr0, *end_ptr1, *end_ptr2;
+			m_kc[0] = (Float)std::strtod(kc_tokens[0].c_str(), &end_ptr0);
+			m_kc[1] = (Float)std::strtod(kc_tokens[1].c_str(), &end_ptr1);
+			m_kc[2] = (Float)std::strtod(kc_tokens[2].c_str(), &end_ptr2);
+			if (*end_ptr0 != '\0' || *end_ptr1 != '\0' || *end_ptr1 != 0)
 				Log(EError, "Invalid input to the 'kc' parameter!");
-			m_distortion = m_kc[0] != 0 || m_kc[1] != 0;
+			m_distortion = m_kc[0] != 0 || m_kc[1] != 0 || m_kc[2] != 0;
 		} else {
-			Log(EError, "The 'kc' requires two arguments!");
+			Log(EError, "The 'kc' requires three arguments!");
 		}
 	}
 
@@ -130,13 +140,15 @@ public:
 		configure();
 		m_kc[0] = stream->readFloat();
 		m_kc[1] = stream->readFloat();
-		m_distortion = m_kc[0] != 0 || m_kc[1] != 0;
+		m_kc[2] = stream->readFloat();
+		m_distortion = m_kc[0] != 0 || m_kc[1] != 0 || m_kc[2] != 0;
 	}
 
 	void serialize(Stream *stream, InstanceManager *manager) const {
 		PerspectiveCamera::serialize(stream, manager);
 		stream->writeFloat(m_kc[0]);
 		stream->writeFloat(m_kc[1]);
+		stream->writeFloat(m_kc[2]);
 	}
 
 	void configure() {
@@ -196,7 +208,8 @@ public:
 	}
 
 	Float applyDistortion(Float r2) const {
-		return 1 + r2*(m_kc[0] + r2*m_kc[1]);
+		//return 1 + r2*(m_kc[0] + r2*m_kc[1]);
+		return 1 + r2*(m_kc[0] + r2*(m_kc[1] + r2*m_kc[2]));
 	}
 
 	Float invertDistortion(Float y) const {
@@ -205,8 +218,10 @@ public:
 
 		while (true) {
 			Float r2 = r*r,
-			      f  = r*(1+r2*(m_kc[0] + r2*m_kc[1])) - y,
-			      df = 1 + r2*(3*m_kc[0] + 5*m_kc[1]*r2);
+				//f  = r*(1+r2*(m_kc[0] + r2*m_kc[1])) - y,
+				//df = 1 + r2*(3*m_kc[0] + 5*m_kc[1]*r2);
+				f = r*(1 + r2*(m_kc[0] + r2*(m_kc[1] + r2*m_kc[2]))) - y,
+				df = 1 + r2*(3*m_kc[0] + r2*(5*m_kc[1] + 7*m_kc[2]*r2));
 
 			r -= f / df;
 
@@ -281,7 +296,8 @@ public:
 			Float rOrig2  = Vector2(p).lengthSquared(),
 				  rFactor = applyDistortion(rOrig2);
 
-			Float deriv = 1 + rOrig2*(3*m_kc[0] + 5*m_kc[1]*rOrig2);
+			Float deriv = 1 + rOrig2*(3 * m_kc[0] + rOrig2*(5 * m_kc[1] + 7 * m_kc[2] * rOrig2));
+			//Float deriv = 1 + rOrig2*(3*m_kc[0] + 5*m_kc[1]*rOrig2);
 			importance *= std::abs(rFactor*deriv);
 			p *= rFactor;
 		}
@@ -550,7 +566,8 @@ private:
 	Float m_normalization;
 	Vector m_dx, m_dy;
 	bool m_distortion;
-	Float m_kc[2];
+	//Float m_kc[2];
+	Float m_kc[3];
 };
 
 MTS_IMPLEMENT_CLASS_S(PerspectiveCameraRDist, false, PerspectiveCamera)

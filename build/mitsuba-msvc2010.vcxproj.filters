@@ -1028,6 +1028,9 @@
     <ClCompile Include="..\src\integrators\misc\multichannel.cpp">
       <Filter>Source Files\integrators\misc</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\sensors\perspective_rdist.cpp">
+      <Filter>Source Files\sensors</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup Label="Header Files">
     <ClInclude Include="..\src\converter\converter.h">

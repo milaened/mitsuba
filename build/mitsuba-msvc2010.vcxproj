@@ -709,6 +709,7 @@
     </ClCompile>
     <ClCompile Include="..\src\samplers\sobol.cpp">
     </ClCompile>
+    <ClCompile Include="..\src\sensors\perspective_rdist.cpp" />
     <ClCompile Include="..\src\sensors\telecentric.cpp">
     </ClCompile>
     <ClCompile Include="..\src\sensors\spherical.cpp">

@@ -178,25 +178,6 @@ public:
 
 		block->clear();
 
-		/* If a channel that should not be filtered is present, 
-		firts (and only, but up to scene definition) sample not jittered */
-		/*bool noFilter = false;
-		for (size_t k = 0; k<m_integrators.size(); ++k) {
-			Log(EInfo, "INTEGRATOR NAME:");
-			Log(EInfo, m_integrators[k]->getProperties().getPluginName().c_str());
-			if (m_integrators[k]->getProperties().getPluginName() == "field" || m_integrators[k]->getProperties().getPluginName() == "") {
-				Log(EInfo, "FIELD NAME:");
-				Log(EInfo, m_integrators[k]->getProperties().getString("field").c_str());
-				if (m_integrators[k]->getProperties().getString("field") == "position" ||
-					m_integrators[k]->getProperties().getString("field") == "relPosition" ||
-					m_integrators[k]->getProperties().getString("field") == "distance") {
-				noFilter = true;
-				break;
-				}
-			}
-		}*/
-		bool noFilter = sampler->getSampleCount() == 1;
-
 		uint32_t queryType = RadianceQueryRecord::ESensorRay;
 		Float *temp = (Float *) alloca(sizeof(Float) * (m_integrators.size() * SPECTRUM_SAMPLES + 2));
 
@@ -210,7 +191,7 @@ public:
 			for (size_t j = 0; j<sampler->getSampleCount(); j++) {
 				rRec.newQuery(queryType, sensor->getMedium());
 				Point2 samplePos;
-				if (j == 0 && noFilter) samplePos = Point2(offset);
+				if (sampler->getSampleCount() == 1) samplePos = Point2(offset);
 				else samplePos = Point2(Point2(offset) + Vector2(rRec.nextSample2D()));
 
 				if (needsApertureSample)
@@ -235,7 +216,7 @@ public:
 				}
 				temp[offset++] = rRec.alpha;
 				temp[offset] = 1.0f;
-				block->put(samplePos, temp, noFilter);
+				block->put(samplePos, temp, sampler->getSampleCount() == 1);
 				sampler->advance();
 			}
 		}
